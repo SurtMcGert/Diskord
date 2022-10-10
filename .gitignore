@@ -1,0 +1,9 @@
+/Diskord
+/target
+/.gcloudignore
+/chatLog.txt
+/config.txt
+/Diskord.jar
+/pom.xml
+/server.jar
+/serverDetails.txt
