@@ -1,17 +1,23 @@
 package com.chat.server;
 
 import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.io.*;
 
 class ServerClientThread extends Thread {
-    Socket socket;
-    int clientNo;
-    Server server;
+    private Socket socket;
+    private int clientNo;
+    private Server server;
 
-    DataInputStream dis;
-    DataOutputStream dos;
-    BufferedReader br;
-    PrintWriter pw;
+    private DataInputStream dis;
+    private DataOutputStream dos;
+    private BufferedReader br;
+    private PrintWriter pw;
+
+    private boolean validated = false;
+    private String pass = "i;<tc2%Otv(\\5B,w0f\\w9,Tw|8v|uK2;Amibjxy?F`68oh8}\\Y2S|(7V=L;8fd";
 
     public ServerClientThread(Server server, Socket inSocket, int counter) {
         this.socket = inSocket;
@@ -21,44 +27,62 @@ class ServerClientThread extends Thread {
 
     public void run() {
         try {
-            System.out.println("client put on new thread");
+            this.server.serverOutput("Client put on new thread\n--------------------------");
             // 1.Create DataInputStream and DataOutputStream objects
             this.dis = new DataInputStream(this.socket.getInputStream());
             this.dos = new DataOutputStream(this.socket.getOutputStream());
             this.br = new BufferedReader(new InputStreamReader(dis));
             this.pw = new PrintWriter(dos, true);
 
-            // send the initial 50 messages in the chat log
-            this.server.logRequest(this, 0, 50);
-
             // read input
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.startsWith("LOGREQUEST")) {
-                    System.out.println("LOGREQUEST BY CLIENT " + this.clientNo);
-                    String[] params = line.substring(10).split(",");
-                    this.server.logRequest(this, Integer.valueOf(params[0]), Integer.valueOf(params[1]));
-                } else if (line.startsWith("!")) {
-                    switch (line.substring(1, line.length())) {
-                        case "connectedClients":
-                            sendMessage("numOfConnectedClients: " + this.server.getNumOfClients());
-                            break;
+                if (this.validated == false) {
+                    // client not valid yet
+                    if (line.equals(this.pass)) {
+                        this.validated = true;
+                        // send the initial 50 messages in the chat log
+                        this.server.logRequest(this, 0, 50);
+                    } else {
+                        this.server.clientExit(this, "connection refused");
+                        break;
                     }
+
                 } else {
-                    server.writeMessage(line);
+                    if (line.startsWith("LOGREQUEST")) {
+                        this.server.serverOutput("LOGREQUEST BY CLIENT " + this.clientNo);
+                        String[] params = line.substring(10).split(",");
+                        this.server.logRequest(this, Integer.valueOf(params[0]), Integer.valueOf(params[1]));
+                    } else if (line.startsWith("!")) {
+                        switch (line.substring(1, line.length())) {
+                            case "connectedClients":
+                                sendMessage("numOfConnectedClients: " + this.server.getNumOfClients(), true);
+                                break;
+                        }
+                    } else {
+                        server.writeMessage(line);
+                    }
                 }
+
             }
 
         } catch (Exception ex) {
             System.out.println(ex);
         } finally {
-            System.out.println("Client -" + clientNo + " exit!! ");
-            this.server.clientExit(this);
+            if (this.validated == true) {
+                this.server.clientExit(this, "client exited");
+            }
         }
     }
 
-    public void sendMessage(String msg) {
-        System.out.println("sending to client" + this.clientNo + ": " + msg);
+    protected int getClientNumber() {
+        return this.clientNo;
+    }
+
+    protected void sendMessage(String msg, boolean log) {
+        if (log == true) {
+            this.server.serverOutput("sending to client" + this.clientNo);
+        }
         pw.println(msg);
     }
 

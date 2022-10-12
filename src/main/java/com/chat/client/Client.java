@@ -62,7 +62,6 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     boolean delete = false;
     String userName = null;
     int localNumOfSavedMessages = 50; // the number of localy loaded messages in the chat
-    // String chatLogFile = "chatLog.txt";
     String configFile = "config.txt";
     String serverDetailsFile = "serverDetails.txt";
     int lastOffsetInBytes = 0;// the number of bytes that were ignored in the last download of messages
@@ -81,9 +80,17 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     Socket sock = null;
     PrintWriter writer = null;
     ClientThread ct = null;
-    boolean connectedToServer = false;
+    protected boolean connectedToServer = false;
+
+    protected enum connectionStatuses {
+        connected, disconnected, error
+    }
+
+    protected connectionStatuses connectionStatus = connectionStatuses.disconnected;
     String ip = "35.189.80.190";
     int port = 5678;
+    private String pass = "i;<tc2%Otv(\\5B,w0f\\w9,Tw|8v|uK2;Amibjxy?F`68oh8}\\Y2S|(7V=L;8fd";
+    final double version = 1.0;
 
     public static void main(String[] args) {
         new Client();
@@ -125,7 +132,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Title
-        frame.setTitle("DISKORD");
+        frame.setTitle("DISKORD V" + this.version);
 
         frame.setBackground(Color.white);
 
@@ -136,19 +143,8 @@ public class Client extends JPanel implements KeyListener, ActionListener {
         addMouseHandler();
 
         userName = getComputerName();
-        try {
-            connectToServer();
-            Thread.sleep(500);
-            connectedToServer = true;
-            // previousText.add("connected, use !help to see a list of commands");
-            outputToConsole("connected, use !help to see a list of commands");
-        } catch (IOException e) {
-            outputToConsole("UH OH... STINKY, ERROR CONNECTING TO SERVER \n" + e.toString());
-            outputToConsole("use !help to see a list of commands");
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+
+        previousText.add("connecting...");
 
         oldestLoadedChunk = ArrayListToString(previousText);
         sub = previousText.size() - 1;
@@ -158,6 +154,27 @@ public class Client extends JPanel implements KeyListener, ActionListener {
         } catch (Exception e) {
         }
         saveConfig();
+
+        repaint();
+        try {
+            connectToServer();
+            while (this.connectionStatus == connectionStatuses.disconnected) {
+                Thread.sleep(100);
+                switch (this.connectionStatus) {
+                    case connected:
+                        this.connectedToServer = true;
+                        break;
+                    case disconnected:
+                        break;
+                    case error:
+                        throw new Exception("your connection was probably refused :/ sry lmao");
+                }
+            }
+
+            outputToConsole("connected, use !help to see a list of commands");
+        } catch (Exception e) {
+            this.serverConnectionError(e.toString());
+        }
 
         repaint();
     }
@@ -170,11 +187,20 @@ public class Client extends JPanel implements KeyListener, ActionListener {
         this.writer = new PrintWriter(sock.getOutputStream(), true);
         this.ct = new ClientThread(this, this.sock);
         ct.start();
+        this.writeMessage(this.pass);
     }
 
     private void disconnectFromServer() throws IOException {
         ct.interrupt();
         this.sock.close();
+    }
+
+    protected void serverConnectionError(String msg) {
+        this.connectedToServer = false;
+        outputToConsole("UH OH... STINKY, ERROR CONNECTING TO SERVER \n");
+        outputToConsole(msg);
+        outputToConsole("use !help to see a list of commands");
+        repaint();
     }
 
     private void loadServerInfo() {
@@ -652,7 +678,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
         }
     }
 
-    private void writeMessage(String msg) {
+    protected void writeMessage(String msg) {
         this.writer.println(msg);
     }
 
@@ -780,4 +806,9 @@ public class Client extends JPanel implements KeyListener, ActionListener {
  * add support to copy and paste
  * add encryption
  * make client updatable
+ * add character limit
+ * make server reject http requests
+ * improve server log
+ * add notification
+ * add icon
  */

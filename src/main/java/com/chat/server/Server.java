@@ -9,38 +9,63 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 
 public class Server {
     private String chatLogFile = "chatLog.txt";
     private ArrayList<ServerClientThread> clients = new ArrayList<ServerClientThread>();
     private int counter = 0;
+    private int numOfConnectedUsers = 0;
+    private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private SecurityManager sm;
+    private ServerSocket server;
 
     public static void main(String[] args) throws Exception {
         new Server();
     }
 
     public Server() {
+
         try {
-            ServerSocket server = new ServerSocket(5678);
-            System.out.println("-- Server started --");
-            while (true) {
-                counter++;
-                // server accept the client connection request
-                Socket serverClient = server.accept();
-                System.out.println("Client " + counter + " started!");
+            this.server = new ServerSocket(5678);
+        } catch (Exception e) {
+            this.serverOutput(e.toString());
+        }
+        this.serverOutput("-- Server started --");
+        while (true) {
+            // server accept the client connection request
+            Socket serverClient;
+            try {
+                serverClient = this.server.accept();
+                this.counter++;
+                this.numOfConnectedUsers++;
+                serverOutput("\n--------------------------\nClient " + counter + " started!");
+                serverOutput("number of currently connected users: " + this.numOfConnectedUsers);
                 // send the request to a separate thread
                 ServerClientThread sct = new ServerClientThread(this, serverClient, counter);
                 clients.add(sct);
                 sct.start();
+                Thread.sleep(500);
+            } catch (Exception e) {
+                this.serverOutput(e.toString());
             }
-        } catch (Exception e) {
-            System.out.println(e);
+
         }
     }
 
-    protected void clientExit(ServerClientThread client) {
+    protected void clientExit(ServerClientThread client, String msg) {
+        this.numOfConnectedUsers--;
+        this.serverOutput("\n--------------------------\nClient " + client.getClientNumber() + " exit!! ");
+        if (!msg.equals("")) {
+            this.serverOutput(msg);
+        }
+        this.serverOutput(
+                "number of currently connected users: " + this.getNumOfClients() + "\n--------------------------");
         clients.remove(client);
-        this.counter--;
+        if (this.numOfConnectedUsers == 0) {
+            this.counter = 0;
+        }
     }
 
     protected void writeMessage(String msg) {
@@ -63,20 +88,20 @@ public class Server {
 
     private void distributeMessage(String msg) {
         for (ServerClientThread client : this.clients) {
-            client.sendMessage(msg);
+            client.sendMessage(msg, true);
         }
     }
 
     protected void logRequest(ServerClientThread client, int offset, int buffer) {
-        System.out.println("logRequest offset: " + offset + " buffer: " + buffer);
+        serverOutput("logRequest offset: " + offset + " buffer: " + buffer);
         ArrayList<String> messages = readMessages(offset, buffer);
         for (String m : messages) {
-            client.sendMessage(m);
+            client.sendMessage(m, false);
         }
     }
 
     protected int getNumOfClients() {
-        return this.counter - 1;
+        return this.numOfConnectedUsers;
     }
 
     private ArrayList readMessages(int offset, int buffer) {
@@ -114,12 +139,10 @@ public class Server {
         } catch (Exception ex) {
         }
 
-        // String output = "";
-        // for (String m : messages) {
-        // output += m + "\n";
-        // }
-        // output = output.substring(0, output.length() - 1);
-
         return messages;
+    }
+
+    protected void serverOutput(String msg) {
+        System.out.println(dtf.format(LocalDateTime.now()) + " - " + msg);
     }
 }

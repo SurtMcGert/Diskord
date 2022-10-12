@@ -1,18 +1,23 @@
 package com.chat.client;
 
 import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.io.*;
 
 public class ClientThread extends Thread {
-    Socket socket;
-    int clientNo;
-    Client client;
+    private Socket socket;
+    private int clientNo;
+    private Client client;
 
-    DataInputStream dis;
-    DataOutputStream dos;
-    BufferedReader br;
-    PrintWriter pw;
-    String logRequest = "";
+    private DataInputStream dis;
+    private DataOutputStream dos;
+    private BufferedReader br;
+    private PrintWriter pw;
+    private String logRequest = "";
+
+    private boolean validated = false;
 
     public ClientThread(Client client, Socket inSocket) {
         this.socket = inSocket;
@@ -28,6 +33,16 @@ public class ClientThread extends Thread {
             this.br = new BufferedReader(new InputStreamReader(dis));
             this.pw = new PrintWriter(dos, true);
 
+            if (this.validated == false) {
+                Thread.sleep(500);
+                if (this.validated == false) {
+                    this.client.connectionStatus = Client.connectionStatuses.error;
+                } else {
+                    this.client.connectionStatus = Client.connectionStatuses.connected;
+                    this.validated = true;
+                }
+            }
+
             // read input
             String line;
             while ((line = br.readLine()) != null) {
@@ -39,6 +54,7 @@ public class ClientThread extends Thread {
             System.out.println(ex);
         } finally {
             System.out.println("Client -" + clientNo + " exit!! ");
+            client.serverConnectionError("");
         }
     }
 
