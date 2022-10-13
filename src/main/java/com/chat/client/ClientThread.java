@@ -33,14 +33,12 @@ public class ClientThread extends Thread {
             this.br = new BufferedReader(new InputStreamReader(dis));
             this.pw = new PrintWriter(dos, true);
 
-            if (this.validated == false) {
-                Thread.sleep(500);
-                if (this.validated == false) {
-                    this.client.connectionStatus = Client.connectionStatuses.error;
-                } else {
-                    this.client.connectionStatus = Client.connectionStatuses.connected;
-                    this.validated = true;
-                }
+            Thread.sleep(1000);
+            if (this.socket.isClosed()) {
+                this.client.connectionStatus = Client.connectionStatuses.error;
+            } else {
+                this.client.connectionStatus = Client.connectionStatuses.connected;
+                this.validated = true;
             }
 
             // read input
