@@ -1,48 +1,31 @@
 package com.chat.client;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.awt.font.LineMetrics;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.RandomAccessFile;
-import java.net.MalformedURLException;
 import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFrame;
@@ -81,6 +64,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     PrintWriter writer = null;
     ClientThread ct = null;
     protected boolean connectedToServer = false;
+    protected boolean updateSuccess = false;
 
     protected enum connectionStatuses {
         connected, disconnected, error
@@ -90,7 +74,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     String ip = "35.189.80.190";
     int port = 5678;
     private String pass = "i;<tc2%Otv(\\5B,w0f\\w9,Tw|8v|uK2;Amibjxy?F`68oh8}\\Y2S|(7V=L;8fd";
-    final double version = 1.0;
+    final double version = 1.02;
 
     public static void main(String[] args) {
         new Client();
@@ -99,9 +83,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     @Override
     public void paint(Graphics g) {
         try {
-            System.out.println("paint");
-            font = new Font("Impact", Font.TRUETYPE_FONT, cfg.getFontSize());
-            textFiedBoundry = this.getHeight() - 70;
+            this.textFiedBoundry = this.getHeight() - 70;
             g.setColor(cfg.getBackgroundColour());
             g.fillRect(0, 0, frame.getWidth(), frame.getHeight());
             g.setColor(cfg.getTextColour());
@@ -114,9 +96,6 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     }
 
     Client() {
-
-        System.out.println("makeFrame");
-
         frame = new JFrame();
         frame.setBackground(Color.black);
         frame.add(this);
@@ -124,7 +103,6 @@ public class Client extends JPanel implements KeyListener, ActionListener {
         frame.setSize(900, 700);
         frame.setResizable(false);
 
-        // frame.setSize(sizeX, sizeY);
         // setting start position of the frame
         frame.setLocationRelativeTo(null);
 
@@ -134,8 +112,6 @@ public class Client extends JPanel implements KeyListener, ActionListener {
         // Title
         frame.setTitle("DISKORD V" + this.version);
 
-        frame.setBackground(Color.white);
-
         // set frame visibility
         frame.setVisible(true);
 
@@ -144,9 +120,6 @@ public class Client extends JPanel implements KeyListener, ActionListener {
 
         userName = getComputerName();
 
-        previousText.add("connecting...");
-
-        oldestLoadedChunk = ArrayListToString(previousText);
         sub = previousText.size() - 1;
         cfg = Config.getInstance(Color.darkGray, Color.green, Color.white, 40);
         try {
@@ -154,7 +127,9 @@ public class Client extends JPanel implements KeyListener, ActionListener {
         } catch (Exception e) {
         }
         saveConfig();
-
+        font = new Font("Impact", Font.TRUETYPE_FONT, cfg.getFontSize());
+        // previousText.add("connecting...");
+        this.outputToConsole("connecting...");
         repaint();
         try {
             connectToServer();
@@ -163,6 +138,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                 switch (this.connectionStatus) {
                     case connected:
                         this.connectedToServer = true;
+                        System.out.println("connected");
                         break;
                     case disconnected:
                         break;
@@ -171,7 +147,24 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                 }
             }
 
+            // setup client after an update
+            this.postUpdateSetup();
+            System.out.println("post update setup was sucessful");
+            // update the client
+            this.update();
+            while (!updateSuccess) {
+                // do nothing
+                Thread.sleep(100);
+            }
+
+            // request the message log
+            this.readMessages(0, this.localNumOfSavedMessages);
+            Thread.sleep(1000);
+            oldestLoadedChunk = ArrayListToString(previousText);
+            System.out.println("connected and ready to go bby");
+            // send welcome message
             outputToConsole("connected, use !help to see a list of commands");
+
         } catch (Exception e) {
             this.serverConnectionError(e.toString());
         }
@@ -179,7 +172,37 @@ public class Client extends JPanel implements KeyListener, ActionListener {
         repaint();
     }
 
+    private void update() {
+        System.out.println("updating");
+        int min = 1000;
+        int max = 9999;
+        int random_int = (int) Math.floor(Math.random() * (max - min + 1) + min);
+        this.ct.isUpdating(true, random_int);
+        this.writeMessage("!UPDATE:" + random_int + "," + this.version);
+    }
+
+    private void postUpdateSetup() {
+        System.out.println("doing post update setup");
+        File setupFile = new File("setup1.bat");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        // if there has been an update
+        if (setupFile.exists()) {
+            // delete the old version
+            if (setupFile.delete()) {
+                this.outputToConsole("updated");
+            } else {
+                this.outputToConsole("we tried to update but idk, it fucked itself so... AHAHAHAHAH LOSER");
+            }
+        }
+    }
+
     private void connectToServer() throws IOException {
+        System.out.println("trying to connect to server");
         loadServerInfo();
         this.sock = new Socket(this.ip, this.port);
         this.in = sock.getInputStream();
@@ -213,6 +236,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
             while ((line = bufferedReader.readLine()) != null) {
                 data.add(line);
             }
+            bufferedReader.close();
             this.ip = data.get(0);
             this.port = Integer.valueOf(data.get(1));
 
@@ -371,7 +395,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                                                     pattern = Pattern.compile(connectedUsersRegex);
                                                     m = pattern.matcher(currentText);
                                                     if (m.matches() == true) {
-                                                        this.writeMessage("!connectedClients");
+                                                        this.writeMessage("!connectedClients:");
                                                     } else {
                                                         writeMessage(userName + ": " + currentText);
                                                     }
@@ -463,8 +487,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
 
     }
 
-    // adds a mouse listner to the program so the user can zoom in and out of the
-    // fractal
+    // adds a mouse listner to the program so the user can scroll thrugh chat
     private void addMouseHandler() {
 
         MouseInputAdapter mia = new MouseInputAdapter() {
@@ -513,28 +536,49 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                         System.out.println("up");
                         sub--;
                         if (sub == -1) {
-
                             numOfExtraLoadedChunks++;
-                            String currentHistory = ArrayListToString(previousText);
                             int numbOfBytes = oldestLoadedChunk.getBytes().length + 1;
                             ArrayList<String> nextChunk = new ArrayList<>();
                             try {
                                 if (previousText.size() >= localNumOfSavedMessages) {
+                                    ArrayList<String> tmp = new ArrayList<>(previousText.size());
+                                    for (int i = 0; i < previousText.size(); i++) {
+                                        tmp.add(previousText.get(i));
+                                    }
+                                    nextChunk = tmp;
+                                    // previousText.clear();
+                                    previousText = new ArrayList<>(previousText.size() + localNumOfSavedMessages);
                                     // nextChunk =
                                     readMessages(lastOffsetInBytes + numbOfBytes, localNumOfSavedMessages);
+                                    // wait until all the older messages have been added to previous text
+                                    try {
+                                        Thread.sleep(100);
+                                    } catch (InterruptedException e) {
+                                        // TODO Auto-generated catch block
+                                        e.printStackTrace();
+                                    }
+
+                                    // add the most recent messages to the end of the list
+                                    for (String s : tmp) {
+                                        previousText.add(s);
+                                    }
                                 }
                             } catch (IOException e) {
                                 // TODO Auto-generated catch block
                                 e.printStackTrace();
                             }
-                            ArrayList<String> temp = new ArrayList<>();
-                            temp.addAll(nextChunk);
-                            temp.addAll(previousText);
-                            previousText = temp;
+                            // ArrayList<String> temp = new ArrayList<>();
+                            // temp.addAll(nextChunk);
+                            // temp.addAll(previousText);
+                            // previousText = temp;
                             lastOffsetInBytes += numbOfBytes;
 
                             oldestLoadedChunk = ArrayListToString(nextChunk);
-                            sub = (previousText.size() - (previousText.size() - nextChunk.size())) - 1;
+                            // sub = (previousText.size() - (previousText.size() - nextChunk.size())) - 1;
+                            sub = (previousText.size() - nextChunk.size()) - 1;
+                            System.out.println("SUB: " + sub);
+                            repaint();
+
                         }
 
                     } else {
@@ -683,6 +727,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     }
 
     private void readMessages(int offset, int buffer) throws IOException {
+        System.out.println("requesting messages");
         ArrayList<String> messages = new ArrayList<String>();
         DataInputStream dis = new DataInputStream(this.sock.getInputStream());
         BufferedReader br = new BufferedReader(new InputStreamReader(dis));

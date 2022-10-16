@@ -18,8 +18,8 @@ public class Server {
     private int counter = 0;
     private int numOfConnectedUsers = 0;
     private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-    private SecurityManager sm;
     private ServerSocket server;
+    private double latestClientVersion = 1.02;
 
     public static void main(String[] args) throws Exception {
         new Server();
@@ -68,6 +68,15 @@ public class Server {
         }
     }
 
+    protected File getUpdate(double clientV) {
+        if (clientV == this.latestClientVersion) {
+            return null;
+        } else {
+            File f = new File("Diskord.exe");
+            return f;
+        }
+    }
+
     protected void writeMessage(String msg) {
         // write string to server
         File f = new File(chatLogFile);
@@ -88,7 +97,7 @@ public class Server {
 
     private void distributeMessage(String msg) {
         for (ServerClientThread client : this.clients) {
-            client.sendMessage(msg, true);
+            client.sendMessage(this.getClass(), msg, true);
         }
     }
 
@@ -96,15 +105,16 @@ public class Server {
         serverOutput("logRequest offset: " + offset + " buffer: " + buffer);
         ArrayList<String> messages = readMessages(offset, buffer);
         for (String m : messages) {
-            client.sendMessage(m, false);
+            client.sendMessage(this.getClass(), m, false);
         }
+        serverOutput("log request returned");
     }
 
     protected int getNumOfClients() {
         return this.numOfConnectedUsers;
     }
 
-    private ArrayList readMessages(int offset, int buffer) {
+    private ArrayList<String> readMessages(int offset, int buffer) {
         ArrayList<String> messages = new ArrayList<String>();
         File f = new File(chatLogFile);
         StringBuilder builder = new StringBuilder();
