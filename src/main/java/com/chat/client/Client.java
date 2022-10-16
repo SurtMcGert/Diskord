@@ -38,6 +38,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     boolean textSelected = false;
     ArrayList<String> previousText = new ArrayList<>();
     String currentText = "";
+    String inProgressText = "";
     Font font = new Font("Impact", Font.TRUETYPE_FONT, 40);// sets the normal font
     int sub = previousText.size() - 1;// the index of the message the chat history is to start from
     boolean ctrl = false;
@@ -65,6 +66,8 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     ClientThread ct = null;
     protected boolean connectedToServer = false;
     protected boolean updateSuccess = false;
+    private ArrayList<String> personalMessageLog = new ArrayList<String>();
+    private int personalMessageLogIndex = 0;
 
     protected enum connectionStatuses {
         connected, disconnected, error
@@ -74,7 +77,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     String ip = "35.189.80.190";
     int port = 5678;
     private String pass = "i;<tc2%Otv(\\5B,w0f\\w9,Tw|8v|uK2;Amibjxy?F`68oh8}\\Y2S|(7V=L;8fd";
-    final double version = 1.02;
+    final double version = 1.04;
 
     public static void main(String[] args) {
         new Client();
@@ -274,7 +277,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     // keylistner
     @Override
     public void keyPressed(KeyEvent ke) {
-        System.out.println(ke.getKeyCode());
+        // System.out.println(ke.getKeyCode());
         if (textSelected == true) {
 
             switch (ke.getKeyCode()) {
@@ -297,6 +300,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                     // enter
                     if (!currentText.equals("")) {
                         if ((connectedToServer == true) && (!currentText.startsWith("!", 0))) {
+                            this.personalMessageLog.add(0, currentText);
                             writeMessage(userName + ": " + currentText);
                         }
                         if (currentText.startsWith("!", 0)) {
@@ -452,10 +456,23 @@ public class Client extends JPanel implements KeyListener, ActionListener {
 
                 case 38:
                     // up arrow
+                    if (this.personalMessageLogIndex == 0) {
+                        this.inProgressText = this.currentText;
+                    }
+                    this.currentText = this.personalMessageLog.get(personalMessageLogIndex);
+                    if (this.personalMessageLogIndex < personalMessageLog.size() - 1) {
+                        this.personalMessageLogIndex++;
+                    }
                     break;
 
                 case 40:
                     // down arrow
+                    if (this.personalMessageLogIndex == 0) {
+                        this.currentText = this.inProgressText;
+                    } else {
+                        this.personalMessageLogIndex--;
+                        this.currentText = this.personalMessageLog.get(personalMessageLogIndex);
+                    }
                     break;
 
                 case 127:
@@ -847,13 +864,9 @@ public class Client extends JPanel implements KeyListener, ActionListener {
 
 // TODO ----------------------------------------------------------------
 /*
- * add support to scroll through previous messages sent
  * add support to copy and paste
  * add encryption
- * make client updatable
  * add character limit
- * make server reject http requests
- * improve server log
  * add notification
  * add icon
  */
