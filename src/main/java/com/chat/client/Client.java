@@ -77,7 +77,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     String ip = "35.189.80.190";
     int port = 5678;
     private String pass = "i;<tc2%Otv(\\5B,w0f\\w9,Tw|8v|uK2;Amibjxy?F`68oh8}\\Y2S|(7V=L;8fd";
-    final double version = 1.04;
+    final double version = 1.06;
 
     public static void main(String[] args) {
         new Client();
@@ -459,14 +459,20 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                     if (this.personalMessageLogIndex == 0) {
                         this.inProgressText = this.currentText;
                     }
-                    this.currentText = this.personalMessageLog.get(personalMessageLogIndex);
-                    if (this.personalMessageLogIndex < personalMessageLog.size() - 1) {
+                    if ((personalMessageLog.size() > 0)
+                            && (this.personalMessageLogIndex < personalMessageLog.size())) {
+                        this.currentText = this.personalMessageLog.get(personalMessageLogIndex);
+                    }
+                    if (this.personalMessageLogIndex < personalMessageLog.size()) {
                         this.personalMessageLogIndex++;
                     }
                     break;
 
                 case 40:
                     // down arrow
+                    if (this.personalMessageLogIndex == personalMessageLog.size()) {
+                        this.personalMessageLogIndex--;
+                    }
                     if (this.personalMessageLogIndex == 0) {
                         this.currentText = this.inProgressText;
                     } else {

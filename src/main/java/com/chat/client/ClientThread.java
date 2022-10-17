@@ -72,15 +72,15 @@ public class ClientThread extends Thread {
 
                                 writer.write("@ECHO OFF");
                                 writer.write("\n:while");
-                                writer.write("\ndel \"\\\\?\\%~dp0Diskord.exe\"");
-                                writer.write("\nif exist \"\\\\?\\%~dp0Diskord.exe\" goto while");
+                                writer.write("\ndel \"%~dp0Diskord.exe\"");
+                                writer.write("\nif exist \"%~dp0Diskord.exe\" goto while");
                                 writer.write("\n:while1");
-                                writer.write("\nif not exist \"\\\\?\\%~dp0Diskord1.exe\" goto while1");
-                                writer.write("\nrename \"\\\\?\\%~dp0Diskord1.exe\" Diskord.exe");
+                                writer.write("\nif not exist \"%~dp0Diskord1.exe\" goto while1");
+                                writer.write("\nrename \"%~dp0Diskord1.exe\" Diskord.exe");
                                 writer.write("\n:while2");
-                                writer.write("\ndel \"\\\\?\\%~dp0setup.bat\"");
-                                writer.write("\nif exist \"\\\\?\\%~dp0setup.bat\" goto while2");
-                                writer.write("\nstart \"\\\\?\\%~dp0Diskord.exe\"");
+                                writer.write("\ndel \"%~dp0setup.bat\"");
+                                writer.write("\nif exist \"%~dp0setup.bat\" goto while2");
+                                writer.write("\nstart \"%~dp0Diskord.exe\"");
                                 writer.write("\nexit /b");
                                 writer.close();
 
@@ -89,8 +89,8 @@ public class ClientThread extends Thread {
 
                                 writer.write("@ECHO OFF");
                                 writer.write("\n:while1");
-                                writer.write("\nif not exist \"\\\\?\\%~dp0setup1.bat\" goto while1");
-                                writer.write("\nstart \"\\\\?\\%~dp0setup1.bat\"");
+                                writer.write("\nif not exist \"%~dp0setup1.bat\" goto while1");
+                                writer.write("\n\"%~dp0setup1.bat\"");
                                 writer.write("\nexit /b");
                                 writer.close();
 
