@@ -365,6 +365,11 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                                         pattern = Pattern.compile(serverInfoRegex);
                                         m = pattern.matcher(currentText);
                                         if (m.matches() == true) {
+                                            if (this.sock.isClosed()) {
+                                                this.connectedToServer = false;
+                                            } else {
+                                                this.connectedToServer = true;
+                                            }
                                             String info = "Server Info---->    IP: " + this.ip + "    port: "
                                                     + this.port
                                                     + "    connected: " + this.connectedToServer;
@@ -871,6 +876,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
 // TODO ----------------------------------------------------------------
 /*
  * add support to copy and paste
+ * add support for images
  * add encryption
  * add character limit
  * add notification
