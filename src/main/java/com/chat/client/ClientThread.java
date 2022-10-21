@@ -71,35 +71,38 @@ public class ClientThread extends Thread {
                                 FileWriter writer = new FileWriter(setup, true);
 
                                 writer.write("@ECHO OFF");
+                                writer.write("\ncd /d %~dp0");
                                 writer.write("\n:while");
-                                writer.write("\ndel \"%~dp0Diskord.exe\"");
-                                writer.write("\nif exist \"%~dp0Diskord.exe\" goto while");
+                                writer.write("\ndel Diskord.exe");
+                                writer.write("\nif exist Diskord.exe goto while");
                                 writer.write("\n:while1");
-                                writer.write("\nif not exist \"%~dp0Diskord1.exe\" goto while1");
-                                writer.write("\nrename \"%~dp0Diskord1.exe\" Diskord.exe");
+                                writer.write("\nif not exist Diskord1.exe goto while1");
+                                writer.write("\nrename Diskord1.exe Diskord.exe");
                                 writer.write("\n:while2");
-                                writer.write("\ndel \"%~dp0setup.bat\"");
-                                writer.write("\nif exist \"%~dp0setup.bat\" goto while2");
-                                writer.write("\nstart \"%~dp0Diskord.exe\"");
-                                writer.write("\nexit /b");
+                                writer.write("\ndel setup.bat");
+                                writer.write("\nif exist setup.bat goto while2");
+                                writer.write("\nstart /B Diskord.exe");
+                                writer.write("\nEXIT /B");
                                 writer.close();
 
                                 setup = new File("setup.bat");
                                 writer = new FileWriter(setup, true);
 
                                 writer.write("@ECHO OFF");
+                                writer.write("\ncd /d %~dp0");
                                 writer.write("\n:while1");
-                                writer.write("\nif not exist \"%~dp0setup1.bat\" goto while1");
-                                writer.write("\n\"%~dp0setup1.bat\"");
-                                writer.write("\nexit /b");
+                                writer.write("\nif not exist setup1.bat goto while1");
+                                writer.write("\nstart /B setup1.bat");
+                                writer.write("\nEXIT /B");
                                 writer.close();
 
                                 // execute the setup file
                                 Runtime runtime = Runtime.getRuntime();
-                                Thread.sleep(100);
+                                Thread.sleep(1000);
                                 try {
-                                    Process p = runtime.exec("cmd /c setup.bat");
-                                    p.waitFor();
+                                    runtime.exec("cmd /c setup.bat");
+                                    Thread.sleep(1000);
+                                    // p.waitFor();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }

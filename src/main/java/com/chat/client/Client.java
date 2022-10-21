@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.event.MouseInputAdapter;
+import java.awt.datatransfer.*;
+import java.awt.*;
 
 public class Client extends JPanel implements KeyListener, ActionListener {
     JFrame frame;
@@ -77,7 +79,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     String ip = "35.189.80.190";
     int port = 5678;
     private String pass = "i;<tc2%Otv(\\5B,w0f\\w9,Tw|8v|uK2;Amibjxy?F`68oh8}\\Y2S|(7V=L;8fd";
-    final double version = 1.06;
+    final double version = 1.08;
 
     public static void main(String[] args) {
         new Client();
@@ -277,7 +279,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     // keylistner
     @Override
     public void keyPressed(KeyEvent ke) {
-        // System.out.println(ke.getKeyCode());
+        System.out.println(ke.getKeyCode());
         if (textSelected == true) {
 
             switch (ke.getKeyCode()) {
@@ -439,6 +441,22 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                 case 18:
                     // ALT
                     alt = true;
+                    break;
+
+                case 86:
+                    // v
+                    if (ctrl == true) {
+                        // Create a Clipboard object using getSystemClipboard() method
+                        Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
+
+                        // Get data stored in the clipboard that is in the form of a string (text)
+                        try {
+                            this.currentText += String.valueOf(c.getData(DataFlavor.stringFlavor));
+                        } catch (UnsupportedFlavorException | IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
                     break;
 
                 case 525:
@@ -652,7 +670,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
             g.setColor(cfg.getTextColour());
             FontMetrics metrics = g.getFontMetrics(font);
             int adv = (metrics.stringWidth(currentText) + 4);
-            System.out.println(adv);
+            // System.out.println(adv);
             g.setFont(font);
             int x = 5;
             if (adv > this.getWidth()) {
