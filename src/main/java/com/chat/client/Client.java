@@ -456,6 +456,8 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
                         }
+                    } else {
+                        writeKey(ke);
                     }
                     break;
 
@@ -493,7 +495,8 @@ public class Client extends JPanel implements KeyListener, ActionListener {
 
                 case 40:
                     // down arrow
-                    if (this.personalMessageLogIndex == personalMessageLog.size()) {
+                    if ((this.personalMessageLogIndex == personalMessageLog.size())
+                            && (personalMessageLog.size() > 0)) {
                         this.personalMessageLogIndex--;
                     }
                     if (this.personalMessageLogIndex == 0) {
@@ -518,19 +521,22 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                     }
 
                 default:
-                    if (cursorOffset == 0) {
-                        currentText += ke.getKeyChar();
-                    } else {
-                        String temp = currentText.substring(0, currentText.length() - cursorOffset) + ke.getKeyChar()
-                                + currentText.substring(currentText.length() - cursorOffset);
-                        currentText = temp;
-                    }
-
+                    writeKey(ke);
             }
             repaint();
 
         }
 
+    }
+
+    private void writeKey(KeyEvent ke) {
+        if (cursorOffset == 0) {
+            currentText += ke.getKeyChar();
+        } else {
+            String temp = currentText.substring(0, currentText.length() - cursorOffset) + ke.getKeyChar()
+                    + currentText.substring(currentText.length() - cursorOffset);
+            currentText = temp;
+        }
     }
 
     // adds a mouse listner to the program so the user can scroll thrugh chat
@@ -749,7 +755,6 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     }
 
     protected void outputToConsole(String outp) {
-
         if (sub == previousText.size() - 1) {
             int lastSubPos = sub;
             previousText.add(outp);
