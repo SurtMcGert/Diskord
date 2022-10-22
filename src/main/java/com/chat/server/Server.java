@@ -19,7 +19,7 @@ public class Server {
     private int numOfConnectedUsers = 0;
     private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private ServerSocket server;
-    private double latestClientVersion = 1.08;
+    private double latestClientVersion = 1.09;
 
     public static void main(String[] args) throws Exception {
         new Server();

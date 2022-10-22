@@ -79,7 +79,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
     String ip = "35.189.80.190";
     int port = 5678;
     private String pass = "i;<tc2%Otv(\\5B,w0f\\w9,Tw|8v|uK2;Amibjxy?F`68oh8}\\Y2S|(7V=L;8fd";
-    final double version = 1.08;
+    final double version = 1.09;
 
     public static void main(String[] args) {
         new Client();
@@ -302,7 +302,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                     // enter
                     if (!currentText.equals("")) {
                         if ((connectedToServer == true) && (!currentText.startsWith("!", 0))) {
-                            this.personalMessageLog.add(0, currentText);
+
                             writeMessage(userName + ": " + currentText);
                         }
                         if (currentText.startsWith("!", 0)) {
@@ -420,6 +420,7 @@ public class Client extends JPanel implements KeyListener, ActionListener {
                         }
 
                     }
+                    this.personalMessageLog.add(0, currentText);
                     currentText = "";
                     cursorOffset = 0;
                     // repaint();
