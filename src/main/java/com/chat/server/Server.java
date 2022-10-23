@@ -19,7 +19,7 @@ public class Server {
     private int numOfConnectedUsers = 0;
     private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private ServerSocket server;
-    private double latestClientVersion = 1.09;
+    private double latestClientVersion = 1.1;
 
     public static void main(String[] args) throws Exception {
         new Server();
@@ -61,7 +61,7 @@ public class Server {
             this.serverOutput(msg);
         }
         this.serverOutput(
-                "number of currently connected users: " + this.getNumOfClients() + "\n--------------------------");
+                "number of currently connected users: " + this.numOfConnectedUsers + "\n--------------------------");
         clients.remove(client);
         if (this.numOfConnectedUsers == 0) {
             this.counter = 0;
@@ -110,8 +110,13 @@ public class Server {
         serverOutput("log request returned");
     }
 
-    protected int getNumOfClients() {
-        return this.numOfConnectedUsers;
+    protected String getConnectedClients() {
+        String users = "(";
+        for (ServerClientThread c : this.clients) {
+            users += c.getUsername() + ", ";
+        }
+        users = users.substring(0, users.length() - 2) + ")";
+        return this.numOfConnectedUsers + "\n" + users;
     }
 
     private ArrayList<String> readMessages(int offset, int buffer) {

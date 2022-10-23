@@ -19,6 +19,8 @@ class ServerClientThread extends Thread {
     private boolean updatingClient = false;
     private ArrayList<String[]> messageBuffer;
     private boolean clientReady = false;
+    private boolean collectedUsername = false;
+    private String username = "";
 
     public ServerClientThread(Server server, Socket inSocket, int counter) {
         this.socket = inSocket;
@@ -61,7 +63,8 @@ class ServerClientThread extends Thread {
                     } else if (line.startsWith("!")) {
                         switch (line.substring(1, line.indexOf(":"))) {
                             case "connectedClients":
-                                sendMessage(this.getClass(), "numOfConnectedClients: " + this.server.getNumOfClients(),
+                                sendMessage(this.getClass(),
+                                        "numOfConnectedClients: " + this.server.getConnectedClients(),
                                         true);
                                 break;
                             case "UPDATE":
@@ -96,6 +99,15 @@ class ServerClientThread extends Thread {
                                 break;
                         }
                     } else {
+                        if (collectedUsername == false) {
+                            try {
+                                int pos = line.indexOf(":");
+                                this.username = line.substring(0, pos);
+                                this.collectedUsername = true;
+                            } catch (Exception e) {
+                                // its fine, ignore it, everything will be okay
+                            }
+                        }
                         server.writeMessage(line);
                     }
                 }
@@ -146,6 +158,14 @@ class ServerClientThread extends Thread {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        }
+    }
+
+    protected String getUsername() {
+        if (this.collectedUsername) {
+            return this.username;
+        } else {
+            return "unknown";
         }
     }
 
