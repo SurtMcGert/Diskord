@@ -69,7 +69,7 @@ public class Client extends JPanel implements KeyListener, ActionListener, Windo
     String setServerInfoRegex = "^!set(\\w*)\\(((?:\\d+.\\d+.\\d+.\\d+)||(?:\\d+))\\)$";
     String reConnectRegex = "^!connect$";
     String connectedUsersRegex = "^!connectedClients$";
-    String usernameRegex = "^!changeUsername\\((\\w*)\\)$";
+    String usernameRegex = "^!changeUsername\\((.*)\\)$";
     String changeLogRegex = "^!changeLog$";
     int cursorOffset = 0;
     Config cfg;
@@ -88,13 +88,10 @@ public class Client extends JPanel implements KeyListener, ActionListener, Windo
     private Clip clip;
     private int characterLimit = 2001;
     private String changeLog = "\n" +
-            "--------CHANGELOG DISKORD V1.1--------\n" +
-            "- added ability to change username with !changeUsername\n" +
-            "- added ability to see the usernames of people online with !connectedClients\n" +
-            "- added the Diskord splash screen on start up\n" +
-            "- added 2001 character limit on messages\n" +
-            "- added notification sound, you will never close diskord ever again\n" +
-            "- fixed word wraping";
+            "--------CHANGELOG DISKORD V1.11--------\n" +
+            "- the \"v\" key now works\n" +
+            "- you can now have a username with spaces in\n" +
+            "- changing your username will update your name on the server side\n";
 
     protected enum connectionStatuses {
         connected, disconnected, error
@@ -381,7 +378,6 @@ public class Client extends JPanel implements KeyListener, ActionListener, Windo
     public void keyPressed(KeyEvent ke) {
         // System.out.println(ke.getKeyCode());
         if (textSelected == true) {
-
             switch (ke.getKeyCode()) {
 
                 case 8:
@@ -520,16 +516,21 @@ public class Client extends JPanel implements KeyListener, ActionListener, Windo
                                                         m = pattern.matcher(currentText);
                                                         if (m.matches() == true) {
                                                             String username = m.group(1);
-                                                            File f = new File(usernameFile);
-                                                            try {
-                                                                FileWriter fw = new FileWriter(f, false);
-                                                                BufferedWriter bw = new BufferedWriter(fw);
-                                                                bw.write(username);
-                                                                bw.close();
-                                                                this.userName = username;
-                                                                outputToConsole("why hello there, " + username);
-                                                            } catch (IOException xe) {
+                                                            if (!username.contains(":")) {
+                                                                File f = new File(usernameFile);
+                                                                try {
+                                                                    FileWriter fw = new FileWriter(f, false);
+                                                                    BufferedWriter bw = new BufferedWriter(fw);
+                                                                    bw.write(username);
+                                                                    bw.close();
+                                                                    this.userName = username;
+                                                                    outputToConsole("why hello there, " + username);
+                                                                } catch (IOException xe) {
+                                                                }
+                                                            } else {
+                                                                outputToConsole("name cannot containt a colon");
                                                             }
+
                                                         } else {
                                                             pattern = Pattern.compile(changeLogRegex);
                                                             m = pattern.matcher(currentText);
@@ -660,7 +661,14 @@ public class Client extends JPanel implements KeyListener, ActionListener, Windo
                     }
 
                 default:
-                    writeKey(ke);
+                    if (((0 <= ke.getKeyCode()) && (ke.getKeyCode() <= 31))
+                            || ((33 <= ke.getKeyCode()) && (ke.getKeyCode() <= 40))
+                            || ((112 <= ke.getKeyCode()) && (ke.getKeyCode() <= 145))
+                            || ((224 <= ke.getKeyCode()) && (ke.getKeyCode() <= 512)) || (524 <= ke.getKeyCode())) {
+                        break;
+                    } else {
+                        writeKey(ke);
+                    }
             }
             repaint();
 
@@ -905,6 +913,25 @@ public class Client extends JPanel implements KeyListener, ActionListener, Windo
 
     @Override
     public void keyReleased(KeyEvent ke) {
+        switch (ke.getKeyCode()) {
+            case 16:
+                // shift
+                break;
+
+            case 20:
+                // caps lock
+                break;
+
+            case 17:
+                // Ctrl
+                ctrl = false;
+                break;
+
+            case 18:
+                // ALT
+                alt = false;
+                break;
+        }
     }
 
     @Override
@@ -1132,4 +1159,5 @@ public class Client extends JPanel implements KeyListener, ActionListener, Windo
  * add ability to send images
  * add encryption
  * add ability to toggle notification sounds
+ * make single instance
  */

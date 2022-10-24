@@ -99,9 +99,12 @@ class ServerClientThread extends Thread {
                                 break;
                         }
                     } else {
+                        int pos = line.indexOf(":");
+                        if (!line.substring(0, pos).equals(this.username)) {
+                            collectedUsername = false;
+                        }
                         if (collectedUsername == false) {
                             try {
-                                int pos = line.indexOf(":");
                                 this.username = line.substring(0, pos);
                                 this.collectedUsername = true;
                             } catch (Exception e) {
