@@ -51,12 +51,12 @@ public class ClientThread extends Thread {
             for (int length; (length = bis.read(bytes)) != -1;) {
                 if ((isUpdating) && (updateStarted)) {
                     // collect update data
-                    byte[] keyBytes = Arrays.copyOfRange(bytes, length - 6, length - 2);
+                    byte[] keyBytes = Arrays.copyOfRange(bytes, length - 5, length - 1);
                     String key = new String(keyBytes);
                     try {
                         if (Integer.valueOf(key) == this.updateKey) {
-                            bos.write(bytes, 0, length - 6);
-                            size += length - 6;
+                            bos.write(bytes, 0, length - 5);
+                            size += length - 5;
                             System.out.println("size: " + size);
                             System.out.println("key found, end of update");
                             bos.writeTo(outputStream);
