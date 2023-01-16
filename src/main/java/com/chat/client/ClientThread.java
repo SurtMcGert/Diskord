@@ -7,6 +7,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import com.chat.Crypt;
+import com.chat.Message;
+
 import java.io.*;
 
 public class ClientThread extends Thread {
@@ -19,6 +23,7 @@ public class ClientThread extends Thread {
 
     private boolean isUpdating = false;
     private int updateKey = 0;
+    private int updateSize = 0;
 
     public ClientThread(Client client, Socket inSocket) {
         this.socket = inSocket;
@@ -38,7 +43,7 @@ public class ClientThread extends Thread {
                 this.client.connectionStatus = Client.connectionStatuses.connected;
             }
 
-            byte[] bytes = new byte[1];
+            byte[] bytes = new byte[4];
             BufferedInputStream bis = new BufferedInputStream(dis);
             String line = "";
             boolean updateStarted = false;
@@ -46,23 +51,31 @@ public class ClientThread extends Thread {
             File f = new File("Diskord1.exe");
             OutputStream outputStream = new FileOutputStream(f);
             int size = 0;
+            boolean readingData = false;
 
             // read incoming data from the server
             for (int length; (length = bis.read(bytes)) != -1;) {
-                if ((isUpdating) && (updateStarted)) {
-                    // collect update data
-                    byte[] keyBytes = Arrays.copyOfRange(bytes, length - 6, length - 2);
-                    String key = new String(keyBytes);
-                    try {
-                        if (Integer.valueOf(key) == this.updateKey) {
-                            bos.write(bytes, 0, length - 6);
-                            size += length - 6;
+
+                int dataLength = 0;
+                if (readingData == false) {
+                    dataLength = ByteBuffer.wrap(bytes).getInt();
+                    readingData = true;
+                    bytes = new byte[dataLength];
+
+                } else {
+
+                    if ((isUpdating) && (updateStarted)) {
+                        bos.write(bytes, 0, length);
+                        size += bos.size();
+                        bos.writeTo(outputStream);
+                        bos.reset();
+                        if (size == this.updateSize) {
                             System.out.println("size: " + size);
                             System.out.println("key found, end of update");
                             bos.writeTo(outputStream);
                             bos.close();
                             outputStream.close();
-                            bytes = new byte[1];
+                            bytes = new byte[4];
                             this.client.updateSuccess = true;
                             // write data to file
                             if (size > 0) {
@@ -112,35 +125,72 @@ public class ClientThread extends Thread {
                                 f.delete();
                             }
                             this.isUpdating = false;
+                            readingData = false;
                         }
-                    } catch (NumberFormatException e) {
-                        bos.write(bytes, 0, length);
-                        size += bos.size();
-                        bos.writeTo(outputStream);
-                        bos.reset();
+                    } else {
+                        ByteArrayInputStream bi = new ByteArrayInputStream(bytes);
+                        ObjectInputStream oi = new ObjectInputStream(bi);
+                        Message message = (Message) oi.readObject();
+                        bi.close();
+                        oi.close();
+
+                        if (isUpdating) {
+                            if (message.getMessageCode() == this.updateKey) {
+                                System.out.println("key found");
+                                this.updateSize = Integer.valueOf(message.getMessage());
+                                if (this.updateSize == 0) {
+                                    System.out.println("no update required");
+                                    this.client.updateSuccess = true;
+                                    this.isUpdating = false;
+                                    f.delete();
+                                    readingData = false;
+                                    bytes = new byte[4];
+                                } else {
+                                    readingData = true;
+                                    updateStarted = true;
+                                    bytes = new byte[1024];
+                                }
+                            }
+                        } else {
+                            // do normal shit
+                            readingData = false;
+                            bytes = new byte[4];
+                            this.client.outputToConsole(message);
+                        }
                     }
+                }
+
+                if ((isUpdating) && (updateStarted)) {
+                    // collect update data
+                    // byte[] keyBytes = Arrays.copyOfRange(bytes, length - 5, length - 1);
+                    // String key = new String(keyBytes);
 
                 } else {
-                    String character = new String(bytes, 0, length);
-                    switch (character) {
-                        case "\n":
-                            if ((this.isUpdating == true) && (line.equals(String.valueOf(this.updateKey)))) {
-                                // time to update
-                                System.out.println("key found, start update");
-                                updateStarted = true;
-                                bytes = new byte[1024];
-                            } else {
-                                // System.out.println(line);
-                                this.client.outputToConsole(line);
-                            }
-                            line = "";
-                            break;
-                        case "\r":
-                            // do nothing
-                            break;
-                        default:
-                            line += character;
-                    }
+
+                    // String character = new String(bytes, 0, length);
+
+                    // line += character;
+
+                    // switch (character) {
+                    // case "\n":
+                    // if ((this.isUpdating == true) &&
+                    // (line.equals(String.valueOf(this.updateKey)))) {
+                    // // time to update
+                    // System.out.println("key found, start update");
+                    // updateStarted = true;
+                    // bytes = new byte[1024];
+                    // } else {
+                    // // System.out.println(line);
+                    // this.client.outputToConsole(new Message(line, this.client.getFont()));
+                    // }
+                    // line = "";
+                    // break;
+                    // case "\r":
+                    // // do nothing
+                    // break;
+                    // default:
+
+                    // }
                 }
             }
 
