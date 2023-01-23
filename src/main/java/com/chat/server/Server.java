@@ -1,16 +1,12 @@
 package com.chat.server;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -26,15 +22,19 @@ import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 
 public class Server {
-    private String chatLogFile = "chatLog.dat";
-    private int savedMessageSize = 4000;
-    private ArrayList<ServerClientThread> clients = new ArrayList<ServerClientThread>();
-    private int counter = 0;
-    private int numOfConnectedUsers = 0;
-    private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-    private Font font = new Font("Monospaced", Font.TRUETYPE_FONT, 30);
-    private ServerSocket server;
-    private double latestClientVersion = 1.12;
+    private String chatLogFile = "chatLog.dat"; // the file that the chatlog is stored in
+    private int savedMessageSize = 4000; // the size that every saved message is padded too before being saved in the
+                                         // log file
+    private ArrayList<ServerClientThread> clients = new ArrayList<ServerClientThread>(); // all the threads connected to
+                                                                                         // this server
+    private int counter = 0; // the client id counter
+    private int numOfConnectedUsers = 0; // the number of clients connected to the server
+    private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"); // date time format for the
+                                                                                        // server log
+    private Font font = new Font("Monospaced", Font.TRUETYPE_FONT, 30); // the font for messages displayed from the
+                                                                        // server
+    private ServerSocket server; // the servers socket
+    private double latestClientVersion = 1.12; // the version of the client and server pair
 
     public static void main(String[] args) throws Exception {
         new Server();
@@ -113,18 +113,6 @@ public class Server {
         }
         distributeMessage(msg);
 
-        // try {
-        // FileWriter fw = new FileWriter(f, true);
-        // BufferedWriter bw = new BufferedWriter(fw);
-        // if (exists == true) {
-        // bw.newLine();
-        // }
-        // // bw.write(msg);
-        // bw.close();
-
-        // } catch (IOException xe) {
-        // }
-
     }
 
     /**
@@ -194,7 +182,6 @@ public class Server {
     private ArrayList<Message> readMessages(int offset, int buffer) {
         ArrayList<Message> messages = new ArrayList<Message>();
         File f = new File(chatLogFile);
-        StringBuilder builder = new StringBuilder();
         RandomAccessFile randomAccessFile = null;
         try {
             randomAccessFile = new RandomAccessFile(f, "r");
@@ -207,7 +194,6 @@ public class Server {
 
             for (long pointer = fileEnd; pointer >= 0; pointer--) {
                 randomAccessFile.seek(pointer);
-                // char c;
                 // read from the end, one byte at a time
                 readBytes++;
                 messageBytes[this.savedMessageSize - readBytes] = (byte) randomAccessFile.read();

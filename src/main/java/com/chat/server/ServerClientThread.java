@@ -2,39 +2,37 @@ package com.chat.server;
 
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-
-import com.chat.Crypt;
 import com.chat.Message;
 
 import java.io.*;
 
 class ServerClientThread extends Thread {
-    private Socket socket;
-    private int clientNo;
-    private Server server;
+    private Socket socket; // the socket this thread will run on
+    private int clientNo; // the number of the client on this thread
+    private Server server; // the server this thread is attached too
 
-    private DataInputStream dis;
-    private BufferedInputStream bis;
-    private DataOutputStream dos;
-    private BufferedReader br;
-    private PrintWriter pw;
+    private DataInputStream dis; // data input stream from the thread
+    private BufferedInputStream bis; // buffered input stream from the thread
+    private DataOutputStream dos; // data output stream onto the thread
 
-    private boolean validated = false;
-    private String pass = "i;<tc2%Otv(\\5B,w0f\\w9,Tw|8v|uK2;Amibjxy?F`68oh8}\\Y2S|(7V=L;8fd";
-    private boolean updatingClient = false;
-    private ArrayList<Message[]> messageBuffer;
-    private boolean clientReady = false;
-    private boolean collectedUsername = false;
-    private String username = "";
+    private boolean validated = false; // is the client on this thread validated
+    private String pass = "i;<tc2%Otv(\\5B,w0f\\w9,Tw|8v|uK2;Amibjxy?F`68oh8}\\Y2S|(7V=L;8fd"; // the password required
+                                                                                               // for validation
+    private boolean updatingClient = false; // is the client updating
+    private ArrayList<Message[]> messageBuffer; // currently buffered messages that need sending to the client
+    private boolean clientReady = false; // is the client ready
+    private boolean collectedUsername = false; // is the clients username known
+    private String username = ""; // the username of the client on this thread
 
+    /**
+     * constructor
+     * 
+     * @param server   - the server this thread is attached too
+     * @param inSocket - the socket this thread will run on
+     * @param counter  - the client number of this thread
+     */
     public ServerClientThread(Server server, Socket inSocket, int counter) {
         this.socket = inSocket;
         this.clientNo = counter;
@@ -49,8 +47,6 @@ class ServerClientThread extends Thread {
             this.dis = new DataInputStream(this.socket.getInputStream());
             this.bis = new BufferedInputStream(dis);
             this.dos = new DataOutputStream(this.socket.getOutputStream());
-            this.br = new BufferedReader(new InputStreamReader(dis));
-            this.pw = new PrintWriter(dos, true);
             byte[] bytes = new byte[4];
             boolean readingData = false;
 
@@ -131,9 +127,6 @@ class ServerClientThread extends Thread {
                                         this.server.serverOutput("update size: " + os.size());
                                         this.sendMessage(this.getClass(), updateMessage, false);
                                         this.sendBytes(this.getClass(), os.toByteArray(), true);
-                                        // this.sendMessage(this.getClass(), new Message(params[0],
-                                        // this.server.getFont()),
-                                        // false);
                                     }
                                     this.updatingClient = false;
                                     // flush the message buffer that needs sending to the client
@@ -162,97 +155,6 @@ class ServerClientThread extends Thread {
                 }
             }
 
-            // while ((line = br.readLine()) != null) {
-            // if (this.validated == false) {
-            // // client not valid yet
-            // if (line.equals(this.pass)) {
-            // this.validated = true;
-            // this.sendMessage(this.getClass(),
-            // new Message("time for a bit of updating, hold tight", this.server.getFont()),
-            // false);
-            // this.updatingClient = true;
-            // } else {
-            // this.server.clientExit(this, "connection refused");
-            // break;
-            // }
-
-            // } else {
-            // if (line.startsWith("LOGREQUEST")) {
-            // if (this.clientReady == false) {
-            // this.clientReady = true;
-            // }
-            // this.server.serverOutput("LOGREQUEST BY CLIENT " + this.clientNo);
-            // String[] params = line.substring(10).split(",");
-            // this.server.logRequest(this, Integer.valueOf(params[0]),
-            // Integer.valueOf(params[1]));
-            // } else if (line.startsWith("!")) {
-            // switch (line.substring(1, line.indexOf(":"))) {
-            // case "connectedClients":
-            // sendMessage(this.getClass(),
-            // new Message("numOfConnectedClients: " + this.server.getConnectedClients(),
-            // this.server.getFont()),
-            // true);
-            // break;
-            // case "UPDATE":
-            // this.updatingClient = true;
-            // this.server.serverOutput("update request by client " + this.clientNo);
-            // String[] params = line.substring(8, line.length()).split(",");
-            // this.server.serverOutput(
-            // "client " + this.clientNo + " key/version: " + params[0] + "/" + params[1]);
-            // File f = this.server.getUpdate(Double.valueOf(params[1]));
-            // if (f == null) {
-            // this.server.serverOutput("client " + this.clientNo + " already up to date");
-            // this.sendMessage(this.getClass(), new Message(params[0],
-            // this.server.getFont()),
-            // true);
-            // this.sendMessage(this.getClass(), new Message(params[0],
-            // this.server.getFont()),
-            // true);
-            // } else {
-            // BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
-            // this.server.serverOutput("updating client " + this.clientNo);
-            // byte[] bytes = new byte[1024];
-            // ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            // for (int length; (length = bis.read(bytes)) != -1;) {
-            // bos.write(bytes, 0, length);
-            // }
-            // bis.close();
-
-            // this.server.serverOutput("update size: " + bos.size());
-            // this.sendMessage(this.getClass(), new Message(params[0],
-            // this.server.getFont()),
-            // false);
-            // this.sendBytes(this.getClass(), bos.toByteArray(), true);
-            // this.sendMessage(this.getClass(), new Message(params[0],
-            // this.server.getFont()),
-            // false);
-            // }
-            // this.updatingClient = false;
-            // // flush the message buffer that needs sending to the client
-            // this.sendMessage(this.getClass(), new Message("", this.server.getFont()),
-            // false);
-            // break;
-            // }
-            // } else {
-            // // TODO - make server read incomming data correctly
-            // int pos = line.indexOf(":");
-            // if (!line.substring(0, pos).equals(this.username)) {
-            // collectedUsername = false;
-            // }
-            // if (collectedUsername == false) {
-            // try {
-            // this.username = line.substring(0, pos);
-            // this.collectedUsername = true;
-            // } catch (Exception e) {
-            // // its fine, ignore it, everything will be okay
-            // }
-            // }
-            // server.writeMessage(line);
-            // }
-            // }
-
-            // }
-
         } catch (
 
         Exception ex) {
@@ -264,10 +166,22 @@ class ServerClientThread extends Thread {
         }
     }
 
+    /**
+     * function to get the number of the client on this thread
+     * 
+     * @return int - the number of the client
+     */
     protected int getClientNumber() {
         return this.clientNo;
     }
 
+    /**
+     * function to send a message on the thread to the client
+     * 
+     * @param sender - the sender of the message
+     * @param msg    - the message to send
+     * @param log    - whether or not to log the message is the server log
+     */
     protected void sendMessage(Class sender, Message msg, boolean log) {
         ByteArrayOutputStream bos = null;
         ObjectOutputStream oos = null;
@@ -300,7 +214,6 @@ class ServerClientThread extends Thread {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-                // pw.println(buffer[0]);
             }
         }
         if (log == true) {
@@ -320,11 +233,16 @@ class ServerClientThread extends Thread {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-
-            // pw.println(msg);
         }
     }
 
+    /**
+     * function to send bytes on the thread to the client
+     * 
+     * @param sender - the sender of the bytes
+     * @param data   - the byte array to send
+     * @param log    - whether or not this should be output in the server log
+     */
     protected void sendBytes(Class sender, byte[] data, boolean log) {
         try {
             this.dos.write(data);
@@ -334,6 +252,12 @@ class ServerClientThread extends Thread {
         }
     }
 
+    /**
+     * function to get the username of the client on this thread
+     * 
+     * @return String - the username of the client on this thread returns "unknown"
+     *         if the username has not been collected yet
+     */
     protected String getUsername() {
         if (this.collectedUsername) {
             return this.username;

@@ -2,29 +2,28 @@ package com.chat.client;
 
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import com.chat.Crypt;
 import com.chat.Message;
 
 import java.io.*;
 
 public class ClientThread extends Thread {
-    private Socket socket;
-    private int clientNo;
-    private Client client;
+    private Socket socket; // the socket this client will run on
+    private int clientNo; // the number of this client
+    private Client client; // the client that this thread is attached too
 
-    private DataInputStream dis;
-    private String logRequest = "";
+    private DataInputStream dis; // data input stream from the socket
+    private String logRequest = ""; // the message log request from the server
 
-    private boolean isUpdating = false;
-    private int updateKey = 0;
-    private int updateSize = 0;
+    private boolean isUpdating = false; // is the client updating
+    private int updateKey = 0; // the key for the current update
+    private int updateSize = 0; // the size of the current update
 
+    /**
+     * constructor
+     * 
+     * @param client   - the client that this thread is attached too
+     * @param inSocket - the socket that this thread will run on
+     */
     public ClientThread(Client client, Socket inSocket) {
         this.socket = inSocket;
         this.client = client;
@@ -45,7 +44,6 @@ public class ClientThread extends Thread {
 
             byte[] bytes = new byte[4];
             BufferedInputStream bis = new BufferedInputStream(dis);
-            String line = "";
             boolean updateStarted = false;
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             File f = new File("Diskord1.exe");
@@ -159,39 +157,6 @@ public class ClientThread extends Thread {
                         }
                     }
                 }
-
-                if ((isUpdating) && (updateStarted)) {
-                    // collect update data
-                    // byte[] keyBytes = Arrays.copyOfRange(bytes, length - 5, length - 1);
-                    // String key = new String(keyBytes);
-
-                } else {
-
-                    // String character = new String(bytes, 0, length);
-
-                    // line += character;
-
-                    // switch (character) {
-                    // case "\n":
-                    // if ((this.isUpdating == true) &&
-                    // (line.equals(String.valueOf(this.updateKey)))) {
-                    // // time to update
-                    // System.out.println("key found, start update");
-                    // updateStarted = true;
-                    // bytes = new byte[1024];
-                    // } else {
-                    // // System.out.println(line);
-                    // this.client.outputToConsole(new Message(line, this.client.getFont()));
-                    // }
-                    // line = "";
-                    // break;
-                    // case "\r":
-                    // // do nothing
-                    // break;
-                    // default:
-
-                    // }
-                }
             }
 
         } catch (Exception ex) {
@@ -202,11 +167,22 @@ public class ClientThread extends Thread {
         }
     }
 
+    /**
+     * function to tell this thread if the client is updating or not
+     * 
+     * @param updating  - wether or not the client is updating
+     * @param updateKey - the update key for the update
+     */
     protected void isUpdating(boolean updating, int updateKey) {
         this.isUpdating = updating;
         this.updateKey = updateKey;
     }
 
+    /**
+     * function to get the log request
+     * 
+     * @return String - the log request
+     */
     protected String getLastLogRequest() {
         return this.logRequest;
     }
