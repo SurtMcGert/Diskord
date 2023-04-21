@@ -29,6 +29,9 @@ public class ClientThread extends Thread {
         this.client = client;
     }
 
+    /**
+     * run method
+     */
     public void run() {
         try {
             System.out.println("client thread created");

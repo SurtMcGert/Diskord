@@ -39,6 +39,9 @@ class ServerClientThread extends Thread {
         this.server = server;
     }
 
+    /**
+     * the run method
+     */
     public void run() {
         try {
             this.server.serverOutput("Client put on new thread\n--------------------------");

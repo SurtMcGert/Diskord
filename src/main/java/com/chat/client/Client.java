@@ -105,6 +105,11 @@ public class Client extends JPanel implements KeyListener, ActionListener, Windo
                                                                                                // authentication
     final double version = 1.12; // the current version of the client server pair
 
+    /**
+     * main method
+     * 
+     * @param args
+     */
     public static void main(String[] args) {
         try {
             new Client();
@@ -114,6 +119,9 @@ public class Client extends JPanel implements KeyListener, ActionListener, Windo
         }
     }
 
+    /**
+     * paint method
+     */
     @Override
     public void paint(Graphics g) {
         try {

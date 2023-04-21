@@ -1,5 +1,6 @@
 package com.chat.server;
 
+//imports
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -13,14 +14,14 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import com.chat.Message;
-
 import java.awt.Font;
-
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 
+/**
+ * server class
+ */
 public class Server {
     private String chatLogFile = "chatLog.dat"; // the file that the chatlog is stored in
     private int savedMessageSize = 4000; // the size that every saved message is padded too before being saved in the
@@ -40,6 +41,9 @@ public class Server {
         new Server();
     }
 
+    /**
+     * constructor
+     */
     public Server() {
 
         try {
@@ -69,6 +73,12 @@ public class Server {
         }
     }
 
+    /**
+     * function to handle client disconnect
+     * 
+     * @param client - the client who disconnected
+     * @param msg    - the message you want to output
+     */
     protected void clientExit(ServerClientThread client, String msg) {
         this.numOfConnectedUsers--;
         this.serverOutput("\n--------------------------\nClient " + client.getClientNumber() + " exit!! ");
@@ -83,6 +93,12 @@ public class Server {
         }
     }
 
+    /**
+     * function to return an update if one is requred
+     * 
+     * @param clientV - the current client version
+     * @return File - the new updated file
+     */
     protected File getUpdate(double clientV) {
         if (clientV == this.latestClientVersion) {
             return null;
@@ -92,6 +108,11 @@ public class Server {
         }
     }
 
+    /**
+     * function to write a message to the chat log file
+     * 
+     * @param msg - the message to log
+     */
     protected void writeMessage(Message msg) {
         // write string to server
         File f = new File(chatLogFile);
@@ -155,12 +176,24 @@ public class Server {
         return cleanData;
     }
 
+    /**
+     * function to distribute a message to all connected clients
+     * 
+     * @param msg
+     */
     private void distributeMessage(Message msg) {
         for (ServerClientThread client : this.clients) {
             client.sendMessage(this.getClass(), msg, true);
         }
     }
 
+    /**
+     * function to handel a chat history request
+     * 
+     * @param client - the client making the request
+     * @param offset - the offset from where they want the history
+     * @param buffer - how much history they want
+     */
     protected void logRequest(ServerClientThread client, int offset, int buffer) {
         serverOutput("logRequest offset: " + offset + " buffer: " + buffer);
         ArrayList<Message> messages = readMessages(offset, buffer);
@@ -170,6 +203,11 @@ public class Server {
         serverOutput("log request returned");
     }
 
+    /**
+     * function to return all the connected clients
+     * 
+     * @return String - a string listing all the connected clients
+     */
     protected String getConnectedClients() {
         String users = "(";
         for (ServerClientThread c : this.clients) {
@@ -179,6 +217,13 @@ public class Server {
         return this.numOfConnectedUsers + "\n" + users;
     }
 
+    /**
+     * function to read the chatLogFile
+     * 
+     * @param offset - where to start reading from
+     * @param buffer - how much to read
+     * @return ArrayList<Message> - a list of messages read from the log file
+     */
     private ArrayList<Message> readMessages(int offset, int buffer) {
         ArrayList<Message> messages = new ArrayList<Message>();
         File f = new File(chatLogFile);
@@ -227,10 +272,18 @@ public class Server {
         return messages;
     }
 
+    /**
+     * function to output a message to the server log file
+     */
     protected void serverOutput(String msg) {
         System.out.println(dtf.format(LocalDateTime.now()) + " - " + msg);
     }
 
+    /**
+     * function to get the servers font that it uses when writing messages
+     * 
+     * @return
+     */
     protected Font getFont() {
         return this.font;
     }
